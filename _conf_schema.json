@@ -1,0 +1,15 @@
+{
+  "open_kick_user": {
+    "type": "bool",
+    "description": "开启踢人功能",
+    "hint": "自由开启/关闭踢人功能，防止Bot生气后自己乱踢人",
+    "default": false
+  },
+  
+  "allow_groupadmin_use": {
+    "type": "bool",
+    "description": "允许群主或者管理员使用机器人管理功能",
+    "hint": "开启后让bot不仅让bot由机器人管理员使用，群聊群主和管理员也可以使用",
+    "default": false
+  }
+}
