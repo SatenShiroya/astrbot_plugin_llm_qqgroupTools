@@ -1,4 +1,5 @@
 import json, time
+from astrbot.core.message.components import Reply
 from typing import List, Dict, Any, AsyncGenerator, Optional
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
@@ -9,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.1.1"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.2.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -26,6 +27,18 @@ class MyPlugin(Star):
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
+
+    @filter.llm_tool(name="set_essence_msg")
+    async def set_essence_msg(self, event: AiocqhttpMessageEvent):
+        """将引用消息添加到群精华"""
+        first_seg = event.get_messages()[0]
+        if isinstance(first_seg, Reply):
+            await event.bot.set_essence_msg(message_id=int(first_seg.id))
+            await event.send(event.plain_result("已设为精华消息"))
+            event.stop_event()
+        else:
+            await event.send(event.plain_result("请引用要设置为精华的消息"))
+            event.stop_event()
 
     @filter.llm_tool(name="set_group_ban")
     async def set_group_ban(
@@ -174,13 +187,41 @@ class MyPlugin(Star):
             yield event.plain_result(f"操作失败：用户：{user_id}的昵称修改。可能的原因是权限不足或API错误。")
             return
 
+    @filter.llm_tool(name="send_group_notice")
+    async def send_group_notice(
+        self, event: AiocqhttpMessageEvent, content: str
+    ) -> MessageEventResult:
+        """
+        发布一条群公告
+        Args:
+            content(string): 要发送的群公告内容
+        """
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+            # 检查是否在群聊中以及操作者权限
+            async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
+                yield result
+                return
+            
+            await event.bot._send_group_notice(
+                group_id=group_id,
+                content=content,
+            )
+            logger.info(f"群公告已发布：{content}")
+            yield event.plain_result(f"群公告已发布")
+            return
+        except Exception as e:    
+            logger.error(f"群公告发布，失败: {e}")
+            yield event.plain_result(f"群公告发布失败。可能的原因是权限不足或API错误。")
+            return
+
     @filter.llm_tool(name="get_group_members_info")
     async def get_group_members(self, event: AstrMessageEvent) -> str:
         """
         1.当需要在QQ群聊中进行禁言/解除禁言/踢出用户等操作时，先调用此工具查询群成员信息，然后再执行对应的禁言/解除禁言/踢出用户等请求。
         2.需要知道群里是否有特定成员时，调用此工具。
         3.其中display_name是“群昵称”，username是用户“QQ名”，user_id是用户“QQ账号”
-        4.获取数据之后需要联系上下文，用符合prompt的方式回答用户的问题或响应用户的请求。
         """
         start_time = time.time()
         
