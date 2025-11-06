@@ -41,7 +41,7 @@ class MyPlugin(Star):
             event.stop_event()
 
     @filter.llm_tool(name="send_like")
-    async def set_group_ban(
+    async def set_like_to_user(
         self, event: AiocqhttpMessageEvent, user_id: str, times:int
     ) -> MessageEventResult:
         """
@@ -55,13 +55,10 @@ class MyPlugin(Star):
                 user_id=user_id,
                 times=times,
             )
-
             logger.info(f"已点赞用户：{user_id}，次数：{times}")
-            yield event.plain_result(f"已赞~")
             return
         except Exception as e:
             logger.error(f"点赞用户：{user_id}， 失败: {e}")
-            yield event.plain_result(f"点赞没成功呢~")
             return
 
     @filter.llm_tool(name="set_group_ban")
