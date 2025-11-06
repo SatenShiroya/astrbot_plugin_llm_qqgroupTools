@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.1.2"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.1.3"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -39,6 +39,30 @@ class MyPlugin(Star):
         else:
             await event.send(event.plain_result("请引用要设置为精华的消息"))
             event.stop_event()
+
+    @filter.llm_tool(name="send_like")
+    async def set_group_ban(
+        self, event: AiocqhttpMessageEvent, user_id: str, times:int
+    ) -> MessageEventResult:
+        """
+        点赞用户，最大点赞次数为10次。
+        Args:
+            user_id(string): 要点赞的用户的QQ账号，必定为一串数字，如(12345678)
+            times(number): 点赞的次数，最大为10次
+        """
+        try:
+            await event.bot.send_like(
+                user_id=user_id,
+                times=times,
+            )
+
+            logger.info(f"已点赞用户：{user_id}，次数：{times}")
+            yield event.plain_result(f"已赞~")
+            return
+        except Exception as e:
+            logger.error(f"点赞用户：{user_id}， 失败: {e}")
+            yield event.plain_result(f"点赞没成功呢~")
+            return
 
     @filter.llm_tool(name="set_group_ban")
     async def set_group_ban(
