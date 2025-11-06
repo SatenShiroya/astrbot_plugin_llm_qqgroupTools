@@ -4,7 +4,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-v1.1.3-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V1.1.3-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -31,10 +31,10 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
 - 搭配好感度插件可实现如下图效果
 
-    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/t1.jpg)
-    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/t2.jpg)
-    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/t3.jpg)
-    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/t4.jpg)
+    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/1.jpg)
+    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/2.jpg)<br>
+    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/3.jpg)
+    ![看到这行字说明图片失效了！请访问插件仓库查看效果！](images/4.jpg)<br>
 
 
 ## 📜功能列表
@@ -43,15 +43,15 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
 ### 群聊管理
 
-    | 功能 | 功能描述 | Tools函数 | 
-    |------|----------|----------|
-    | 禁言 | 禁言某用户，时间可以口语化指定，当然也可用让AI解除禁言 | 'set_group_ban' |
-    | 踢人 | 从群聊移除某人 | 'set_group_kick' |
-    | 全群禁言 | 开启或关闭本群的全体禁言 | 'set_group_whole_ban' |
-    | 发布群公告 | 在本群发公告，内容可以让AI自拟 | 'send_group_notice' |
-    | 改群名片 | 修改用户昵称 | 'set_group_card' |
-    | 设精 | 群发言设精华，必须引用一条消息 | 'set_essence_msg' |
-    | 点赞 | 点赞某用户的名片 | 'send_like' |
+| 功能 | 功能描述 | Tools函数 | 
+|------|----------|----------|
+| 禁言 | 禁言某用户，时间可以口语化指定，当然也可用让AI解除禁言 | 'set_group_ban' |
+| 踢人 | 从群聊移除某人 | 'set_group_kick' |
+| 全群禁言 | 开启或关闭本群的全体禁言 | 'set_group_whole_ban' |
+| 发布群公告 | 在本群发公告，内容可以让AI自拟 | 'send_group_notice' |
+| 改群名片 | 修改用户昵称 | 'set_group_card' |
+| 设精 | 群发言设精华，必须引用一条消息 | 'set_essence_msg' |
+| 点赞 | 点赞某用户的名片 | 'send_like' |
 
 ## 📝版本变更履历
 
