@@ -2,11 +2,12 @@
 
 # AstrBot Admin Tools Plugin
 
+![views](https://count.getloli.com/get/@astrbot_plugin_llm_qqgroupTools?theme=booru-jaypee)<br>
+
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
 [![Plugin Version](https://img.shields.io/badge/Version-V1.1.3-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
-[![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
 </div>
 
