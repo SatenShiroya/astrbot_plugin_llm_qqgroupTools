@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.1.3"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.2.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -21,6 +21,8 @@ class MyPlugin(Star):
         self.open_kick_user = config.get("open_kick_user",False)
         # 允许群主或管理员使用机器人管理功能
         self.allow_groupadmin_use = config.get("allow_groupadmin_use",False)
+        # 权限验证开关
+        self.Permission_verification = config.get("Permission_verification",True)
 
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
@@ -78,18 +80,19 @@ class MyPlugin(Star):
             operator_name = event.get_sender_name()
             target_user_id = user_id  # 被禁言的目标用户ID
             target_user_name = user_name  # 被禁言的目标用户昵称
-            
-            # 检查是否在群聊中以及操作者权限
-            async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                yield result
-                return
+
+            if self.Permission_verification:
+                # 检查是否在群聊中以及操作者权限
+                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
+                    yield result
+                    return
 
             # 对目标用户执行禁言操作
             await event.bot.set_group_ban(
-                group_id=group_id, 
-                user_id=target_user_id,  # 对目标用户执行禁言
-                duration=duration, 
-                self_id=self_id
+                group_id=int(group_id), 
+                user_id=int(target_user_id),  # 对目标用户执行禁言
+                self_id=int(self_id),
+                duration=duration
             )
 
             logger.info(f"用户：{target_user_id}在群聊中被：{operator_name}执行禁言{duration}秒")
@@ -121,16 +124,17 @@ class MyPlugin(Star):
                 yield event.plain_result("当前未开启踢人功能，无法执行该操作。")
                 return
             
-            # 检查是否在群聊中以及操作者权限
-            async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                yield result
-                return
+            if self.Permission_verification:
+                # 检查是否在群聊中以及操作者权限
+                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
+                    yield result
+                    return
             
             await event.bot.set_group_kick(
-                group_id=group_id,
-                user_id=target_user_id,
+                group_id=int(group_id),
+                user_id=int(target_user_id),
                 reject_add_request=False,
-                self_id=self_id,
+                self_id=int(self_id),
             )
             logger.info(f"用户：{user_id}在群聊中被：{self_id}踢出")
             yield event.plain_result(f"用户 {target_user_name} 已被踢出群聊。")
@@ -155,15 +159,16 @@ class MyPlugin(Star):
             self_id = event.get_self_id()
             operator_name = event.get_sender_name()
             
-            # 检查是否在群聊中以及操作者权限
-            async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                yield result
-                return
+            if self.Permission_verification:
+                # 检查是否在群聊中以及操作者权限
+                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
+                    yield result
+                    return
             
             await event.bot.set_group_whole_ban(
-                group_id=group_id,
+                group_id=int(group_id),
                 enable=enable,
-                self_id=self_id,
+                self_id=int(self_id),
             )
 
             logger.info(f"已{action_text}全群禁言")
@@ -189,15 +194,16 @@ class MyPlugin(Star):
             self_id = event.get_self_id()
             operator_name = event.get_sender_name()
             
-            # 检查是否在群聊中以及操作者权限
-            async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                yield result
-                return
+            if self.Permission_verification:
+                # 检查是否在群聊中以及操作者权限
+                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
+                    yield result
+                    return
             
             await event.bot.set_group_card(
-                group_id=group_id,
-                self_id=self_id,
-                user_id=user_id,
+                group_id=int(group_id),
+                self_id=int(self_id),
+                user_id=int(user_id),
                 card=card,
             )
             logger.info(f"用户：{user_id}的昵称已修改为：{card}")
@@ -220,13 +226,14 @@ class MyPlugin(Star):
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
-            # 检查是否在群聊中以及操作者权限
-            async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                yield result
-                return
+            if self.Permission_verification:
+                # 检查是否在群聊中以及操作者权限
+                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
+                    yield result
+                    return
             
             await event.bot._send_group_notice(
-                group_id=group_id,
+                group_id=int(group_id),
                 content=content,
             )
             logger.info(f"群公告已发布：{content}")
