@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.2.0"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.3.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -23,6 +23,8 @@ class MyPlugin(Star):
         self.allow_groupadmin_use = config.get("allow_groupadmin_use",False)
         # 权限验证开关
         self.Permission_verification = config.get("Permission_verification",True)
+        # 结果反馈开关
+        self.Result_response_switch = config.get("Result_response_switch",True)
 
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
@@ -62,13 +64,48 @@ class MyPlugin(Star):
         except Exception as e:
             logger.error(f"点赞用户：{user_id}， 失败: {e}")
             return
+        
+    @filter.llm_tool(name="set_group_ban_byself")
+    async def set_group_ban_byself(
+        self, event: AiocqhttpMessageEvent, user_id: str, duration: int, user_name: str
+    ) -> MessageEventResult:
+        """
+        自主禁言功能，当机器人自主决定需要在群聊中禁言指定用户时使用。被禁言的用户在禁言期间将无法发送消息。
+        Args:
+            user_id(string): 要禁言的用户的QQ账号，必定为一串数字，如(12345678)
+            user_name(string): 要禁言的用户的QQ昵称，如(小明)
+            duration(number): 禁言持续时间（以秒为单位），必须是 60 的倍数（例如：60、180）。设置为 0 即解除禁言
+        """
+        try:
+            group_id = event.get_group_id()
+            self_id = event.get_self_id()
+            operator_name = event.get_sender_name()
+            target_user_id = user_id  # 被禁言的目标用户ID
+            target_user_name = user_name  # 被禁言的目标用户昵称
+
+            # 对目标用户执行禁言操作
+            await event.bot.set_group_ban(
+                group_id=int(group_id), 
+                user_id=int(target_user_id),  # 对目标用户执行禁言
+                self_id=int(self_id),
+                duration=duration
+            )
+
+            logger.info(f"用户：{operator_name}因为自身消息在群聊中被BOT自主禁言功能禁言{duration}秒")
+            if self.Result_response_switch:
+                yield event.plain_result(f"用户 {target_user_name} 已被禁言。")
+            return
+        except Exception as e:
+            logger.error(f"禁言用户 {target_user_id} 失败: {e}")
+            yield event.plain_result(f"操作失败：无法禁言用户 {target_user_name}。可能的原因是权限不足或API错误。")
+            return    
 
     @filter.llm_tool(name="set_group_ban")
     async def set_group_ban(
         self, event: AiocqhttpMessageEvent, user_id: str, duration: int, user_name: str
     ) -> MessageEventResult:
         """
-        在群聊中禁言某用户。被禁言的用户在禁言期间将无法发送消息。
+        当需要听从机器人管理员或者群聊管理员的指令，在群聊中禁言指定用户时使用。被禁言的用户在禁言期间将无法发送消息。
         Args:
             user_id(string): 要禁言的用户的QQ账号，必定为一串数字，如(12345678)
             user_name(string): 要禁言的用户的QQ昵称，如(小明)
@@ -96,7 +133,8 @@ class MyPlugin(Star):
             )
 
             logger.info(f"用户：{target_user_id}在群聊中被：{operator_name}执行禁言{duration}秒")
-            yield event.plain_result(f"用户 {target_user_name} 已被禁言。")
+            if self.Result_response_switch:
+                yield event.plain_result(f"用户 {target_user_name} 已被禁言。")
             return
         except Exception as e:
             logger.error(f"禁言用户 {target_user_id} 失败: {e}")
@@ -137,7 +175,8 @@ class MyPlugin(Star):
                 self_id=int(self_id),
             )
             logger.info(f"用户：{user_id}在群聊中被：{self_id}踢出")
-            yield event.plain_result(f"用户 {target_user_name} 已被踢出群聊。")
+            if self.Result_response_switch:
+                yield event.plain_result(f"用户 {target_user_name} 已被踢出群聊。")
             return
         except Exception as e:    
             logger.error(f"踢出用户 {user_id} 失败: {e}")
@@ -172,7 +211,8 @@ class MyPlugin(Star):
             )
 
             logger.info(f"已{action_text}全群禁言")
-            yield event.plain_result(f"已{action_text}全群禁言。")
+            if self.Result_response_switch:
+                yield event.plain_result(f"已{action_text}全群禁言。")
             return
         except Exception as e:    
             logger.error(f"{action_text}全群禁言，失败: {e}")
@@ -207,7 +247,8 @@ class MyPlugin(Star):
                 card=card,
             )
             logger.info(f"用户：{user_id}的昵称已修改为：{card}")
-            yield event.plain_result(f"用户：{user_id}的昵称被修改为：{card}")
+            if self.Result_response_switch:
+                yield event.plain_result(f"用户：{user_id}的昵称被修改为：{card}")
             return
         except Exception as e:    
             logger.error(f"用户：{user_id}的昵称修改，失败: {e}")
@@ -237,7 +278,8 @@ class MyPlugin(Star):
                 content=content,
             )
             logger.info(f"群公告已发布：{content}")
-            yield event.plain_result(f"群公告已发布")
+            if self.Result_response_switch:
+                yield event.plain_result(f"群公告已发布")
             return
         except Exception as e:    
             logger.error(f"群公告发布，失败: {e}")

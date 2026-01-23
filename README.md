@@ -6,7 +6,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-V1.2.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V1.3.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -14,13 +14,14 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
 ## ✨ _介绍_
 
-- 这是一个 AstrBot 管理工具插件，通过调用接口使AI能听从管理员命令管理群聊
+- 这是一个 AstrBot 管理工具插件，通过调用接口使AI能听从管理员命令管理群聊或自主实现禁言功能
 - 功能包括：禁言和解禁、全群禁言、踢人、改名、发群公告、消息设精，更多内容实现中
 - 拥有权限控制，在配置项选择是否开启权限验证（默认开启）和是否只有AI管理员能命令还是群主和群管理也可用，以及最重要的踢人功能开关
 
 ## ⌨️ _使用说明_
 
 - 推荐在Astrbot人格中暗示AI本身有相应的功能(详情看下方Tools函数)，以便更好使用
+   - 请一定要在人格设置中区分两个禁言工具的使用场景，否则LLM模型调用功能时可能会有概率混淆
 - 建议：搭配好感度插件使用，让AI更像个有脾气的小鬼管理员（为所欲为）
 - 不建议：开启T人功能，以免一觉醒来臭脾气AI把人都踢掉了
 
@@ -31,7 +32,7 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
 ## 📌 _效果_
 
-- 搭配好感度插件可实现如下图效果（鉴于Astrbot本身的更新，目前想要AI自主禁言以实现此效果需要关闭插件配置中的权限验证开关）
+- 搭配好感度插件可实现如下图效果
 
 <div align="center">
   <img src="images/1.jpg" alt="看到这行字说明图片失效了！请访问插件仓库查看效果！">
@@ -46,7 +47,8 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
 | 功能 | 功能描述 | Tools函数 | 
 |------|----------|----------|
-| 禁言 | 禁言某用户，时间可以口语化指定，当然也可用让AI解除禁言 | 'set_group_ban' |
+| 禁言 | 让AI禁言某用户，时间可以口语化指定，当然也可用让AI解除禁言 | 'set_group_ban' |
+| 自主禁言 | AI自主决定禁言某用户， | 'set_group_ban_byself' |
 | 踢人 | 从群聊移除某人 | 'set_group_kick' |
 | 全群禁言 | 开启或关闭本群的全体禁言 | 'set_group_whole_ban' |
 | 发布群公告 | 在本群发公告，内容可以让AI自拟 | 'send_group_notice' |
@@ -57,6 +59,10 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 ## 📝 _版本变更履历_
 <details>
 <summary style="padding-left: 1.6em;"><em>点此展开显示</em></summary>
+
+- ### _V 1.3.0_
+  - 新增自主禁言工具'set_group_ban_byself'，已修复原本失效的自主禁言功能。需要用户在AI人格设定中强调和原本禁言功能的区别和使用场景。
+  - 新增功能使用反馈开关，用户可以自行决定AI成功使用功能后是否进行反馈，但功能使用失败时依旧会进行反馈。
 
 - ### _V 1.2.0_
   - 由于Astrbot更新导致AI自主禁言失效，这边新增权限验证开关来最大限度还原原本的效果表现
