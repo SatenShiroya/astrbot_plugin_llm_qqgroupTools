@@ -6,7 +6,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-V1.3.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V1.4.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -60,6 +60,10 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 <details>
 <summary style="padding-left: 1.6em;"><em>点此展开显示</em></summary>
 
+- ### _V 1.4.0_
+  - 优化代码结构，修复原本LLM调用工具，结果直接发送给用户而未返回给LLM的问题
+  - 去除了工具调用后是否返回信息的配置开关，因为LLM收到工具调用结果后会触发回复
+  
 - ### _V 1.3.0_
   - 新增自主禁言工具'set_group_ban_byself'，已修复原本失效的自主禁言功能。需要用户在AI人格设定中强调和原本禁言功能的区别和使用场景。
   - 新增功能使用反馈开关，用户可以自行决定AI成功使用功能后是否进行反馈，但功能使用失败时依旧会进行反馈。

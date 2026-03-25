@@ -18,12 +18,5 @@
     "description": "允许群主或者管理员使用机器人管理功能",
     "hint": "开启后让bot不仅让bot由机器人管理员使用，群聊群主和管理员也可以使用,只有上方权限验证功能开启时该选项才有效",
     "default": false
-  },
-
-  "Result_response_switch": {
-    "type": "bool",
-    "description": "开启功能使用结果反馈",
-    "hint": "自由开启/关闭AI功能使用结果反馈，开启后每次使用功能后机器人会反馈操作结果,操作失败时仍会反馈",
-    "default": true
   }
 }

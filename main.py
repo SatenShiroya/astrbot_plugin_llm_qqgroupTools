@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.3.0"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.4.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -23,8 +23,8 @@ class MyPlugin(Star):
         self.allow_groupadmin_use = config.get("allow_groupadmin_use",False)
         # 权限验证开关
         self.Permission_verification = config.get("Permission_verification",True)
-        # 结果反馈开关
-        self.Result_response_switch = config.get("Result_response_switch",True)
+        # 结果反馈开关(已去除)
+        #self.Result_response_switch = config.get("Result_response_switch",True)
 
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
@@ -33,21 +33,29 @@ class MyPlugin(Star):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
 
     @filter.llm_tool(name="set_essence_msg")
-    async def set_essence_msg(self, event: AiocqhttpMessageEvent):
+    async def set_essence_msg(
+        self, event: AiocqhttpMessageEvent
+        ) -> dict:
         """将引用消息添加到群精华"""
         first_seg = event.get_messages()[0]
         if isinstance(first_seg, Reply):
             await event.bot.set_essence_msg(message_id=int(first_seg.id))
-            await event.send(event.plain_result("已设为精华消息"))
-            event.stop_event()
+            msg = f"已将消息 {first_seg.id} 添加到群精华"
+            return {
+                "status": "success",
+                "message": msg
+            }
         else:
-            await event.send(event.plain_result("请引用要设置为精华的消息"))
-            event.stop_event()
+            msg = "请引用要设置为精华的消息"
+            return {
+                "status": "error",
+                "message": msg
+            }
 
     @filter.llm_tool(name="send_like")
     async def set_like_to_user(
         self, event: AiocqhttpMessageEvent, user_id: str, times:int
-    ) -> MessageEventResult:
+    ) -> dict:
         """
         点赞用户，最大点赞次数为10次。
         Args:
@@ -60,15 +68,23 @@ class MyPlugin(Star):
                 times=times,
             )
             logger.info(f"已点赞用户：{user_id}，次数：{times}")
-            return
+            msg=f"已点赞用户：{user_id}，次数：{times}"
+            return {
+                "status": "success",
+                "message": msg
+            }
         except Exception as e:
             logger.error(f"点赞用户：{user_id}， 失败: {e}")
-            return
+            msg=f"点赞用户：{user_id}， 失败: {e}"
+            return {
+                "status": "error",
+                "message": msg
+            }
         
     @filter.llm_tool(name="set_group_ban_byself")
     async def set_group_ban_byself(
         self, event: AiocqhttpMessageEvent, user_id: str, duration: int, user_name: str
-    ) -> MessageEventResult:
+    ) -> dict:
         """
         自主禁言功能，当机器人自主决定需要在群聊中禁言指定用户时使用。被禁言的用户在禁言期间将无法发送消息。
         Args:
@@ -91,19 +107,24 @@ class MyPlugin(Star):
                 duration=duration
             )
 
-            logger.info(f"用户：{operator_name}因为自身消息在群聊中被BOT自主禁言功能禁言{duration}秒")
-            if self.Result_response_switch:
-                yield event.plain_result(f"用户 {target_user_name} 已被禁言。")
-            return
+            logger.info(f"BOT自主决定：禁言用户 {target_user_name} ({target_user_id}) {duration}秒")
+            msg = f"BOT自主决定：禁言用户 {target_user_name} ({target_user_id}) {duration}秒"
+            return{
+                "status": "success",
+                "message": msg
+            }
         except Exception as e:
             logger.error(f"禁言用户 {target_user_id} 失败: {e}")
-            yield event.plain_result(f"操作失败：无法禁言用户 {target_user_name}。可能的原因是权限不足或API错误。")
-            return    
+            msg = f"操作失败：无法禁言用户 {target_user_name}。可能的原因是权限不足或API错误。"
+            return{
+                "status": "error",
+                "message": msg
+            }    
 
     @filter.llm_tool(name="set_group_ban")
     async def set_group_ban(
         self, event: AiocqhttpMessageEvent, user_id: str, duration: int, user_name: str
-    ) -> MessageEventResult:
+    ) -> dict:
         """
         当需要听从机器人管理员或者群聊管理员的指令，在群聊中禁言指定用户时使用。被禁言的用户在禁言期间将无法发送消息。
         Args:
@@ -119,10 +140,11 @@ class MyPlugin(Star):
             target_user_name = user_name  # 被禁言的目标用户昵称
 
             if self.Permission_verification:
-                # 检查是否在群聊中以及操作者权限
-                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                    yield result
-                    return
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
 
             # 对目标用户执行禁言操作
             await event.bot.set_group_ban(
@@ -133,19 +155,23 @@ class MyPlugin(Star):
             )
 
             logger.info(f"用户：{target_user_id}在群聊中被：{operator_name}执行禁言{duration}秒")
-            if self.Result_response_switch:
-                yield event.plain_result(f"用户 {target_user_name} 已被禁言。")
-            return
+            msg = f"用户 {target_user_name} 已被{operator_name}执行禁言{duration}秒。"
+            return {
+                "status": "success",
+                "message": msg
+            }
         except Exception as e:
-            logger.error(f"禁言用户 {target_user_id} 失败: {e}")
-            yield event.plain_result(f"操作失败：无法禁言用户 {target_user_name}。可能的原因是权限不足或API错误。")
-            return
-
+            logger.error(f"{operator_name}禁言用户 {target_user_id} 失败: {e}")
+            msg = f"操作失败：{operator_name}无法禁言用户 {target_user_name}。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
 
     @filter.llm_tool(name="set_group_kick")
     async def set_group_kick(
         self, event: AiocqhttpMessageEvent, user_id: str, user_name: str
-    ) -> MessageEventResult:
+    ) -> dict:
         """
         将用户从群聊中移除。
         Args:
@@ -159,14 +185,19 @@ class MyPlugin(Star):
             target_user_id = user_id  # 被踢出的目标用户ID
             target_user_name = user_name  # 被踢出的目标用户昵称
             if not self.open_kick_user:
-                yield event.plain_result("当前未开启踢人功能，无法执行该操作。")
-                return
+                msg = f"操作失败：踢人功能未开启，无法踢出用户 {target_user_name}。"
+                logger.error(msg)
+                return {
+                    "status": "error",
+                    "message": msg
+                }
             
             if self.Permission_verification:
-                # 检查是否在群聊中以及操作者权限
-                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                    yield result
-                    return
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
             
             await event.bot.set_group_kick(
                 group_id=int(group_id),
@@ -174,19 +205,24 @@ class MyPlugin(Star):
                 reject_add_request=False,
                 self_id=int(self_id),
             )
-            logger.info(f"用户：{user_id}在群聊中被：{self_id}踢出")
-            if self.Result_response_switch:
-                yield event.plain_result(f"用户 {target_user_name} 已被踢出群聊。")
-            return
+            logger.info(f"用户：{target_user_id}{target_user_name}已在群聊中被bot踢出")
+            msg = f"用户 {target_user_name} ({target_user_id}) 群聊中被bot踢出。"
+            return {
+                "status": "success",
+                "message": msg
+            }
         except Exception as e:    
-            logger.error(f"踢出用户 {user_id} 失败: {e}")
-            yield event.plain_result(f"操作失败：无法踢出用户 {target_user_name}。可能的原因是功能未开启或权限不足或API错误。")
-            return
-
+            logger.error(f"踢出用户 {target_user_id} {target_user_name}失败: {e}")
+            msg = f"操作失败：无法踢出用户 {target_user_name} ({target_user_id})。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
+        
     @filter.llm_tool(name="set_group_whole_ban")
     async def set_group_whole_ban(
         self, event: AiocqhttpMessageEvent, enable: bool
-    ) -> MessageEventResult:
+    ) -> dict:
         """
         全体禁言，即禁言整个群聊。
         Args:
@@ -199,10 +235,11 @@ class MyPlugin(Star):
             operator_name = event.get_sender_name()
             
             if self.Permission_verification:
-                # 检查是否在群聊中以及操作者权限
-                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                    yield result
-                    return
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
             
             await event.bot.set_group_whole_ban(
                 group_id=int(group_id),
@@ -211,18 +248,23 @@ class MyPlugin(Star):
             )
 
             logger.info(f"已{action_text}全群禁言")
-            if self.Result_response_switch:
-                yield event.plain_result(f"已{action_text}全群禁言。")
-            return
+            msg = f"已{action_text}全群禁言"
+            return {
+                "status": "success",
+                "message": msg
+            }
         except Exception as e:    
             logger.error(f"{action_text}全群禁言，失败: {e}")
-            yield event.plain_result(f"操作失败：{action_text}全群禁言。可能的原因是权限不足或API错误。")
-            return
+            msg = f"操作失败：无法{action_text}全群禁言。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
 
     @filter.llm_tool(name="set_group_card")
     async def set_group_card(
         self, event: AiocqhttpMessageEvent, user_id: str, card: str
-    ) -> MessageEventResult:
+    ) -> dict:
         """
         修改或取消群聊用户的群昵称
         Args:
@@ -235,10 +277,11 @@ class MyPlugin(Star):
             operator_name = event.get_sender_name()
             
             if self.Permission_verification:
-                # 检查是否在群聊中以及操作者权限
-                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                    yield result
-                    return
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
             
             await event.bot.set_group_card(
                 group_id=int(group_id),
@@ -247,18 +290,24 @@ class MyPlugin(Star):
                 card=card,
             )
             logger.info(f"用户：{user_id}的昵称已修改为：{card}")
-            if self.Result_response_switch:
-                yield event.plain_result(f"用户：{user_id}的昵称被修改为：{card}")
-            return
+            
+            msg = f"用户 {user_id} 的昵称已修改为：{card}" if card else f"用户 {user_id} 的群昵称已取消"
+            return {
+                "status": "success",
+                "message": msg
+            }
         except Exception as e:    
             logger.error(f"用户：{user_id}的昵称修改，失败: {e}")
-            yield event.plain_result(f"操作失败：用户：{user_id}的昵称修改。可能的原因是权限不足或API错误。")
-            return
+            msg = f"操作失败：用户：{user_id}的昵称修改。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
 
     @filter.llm_tool(name="send_group_notice")
     async def send_group_notice(
         self, event: AiocqhttpMessageEvent, content: str
-    ) -> MessageEventResult:
+    ) -> dict:
         """
         发布一条群公告
         Args:
@@ -267,24 +316,31 @@ class MyPlugin(Star):
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
+
             if self.Permission_verification:
-                # 检查是否在群聊中以及操作者权限
-                async for result in check_group_and_permission(event, self.allow_groupadmin_use, operator_name):
-                    yield result
-                    return
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
             
             await event.bot._send_group_notice(
                 group_id=int(group_id),
                 content=content,
             )
             logger.info(f"群公告已发布：{content}")
-            if self.Result_response_switch:
-                yield event.plain_result(f"群公告已发布")
-            return
+            msg = f"群公告已发布：{content}"
+            return {
+                "status": "success",
+                "message": msg
+            }
         except Exception as e:    
             logger.error(f"群公告发布，失败: {e}")
-            yield event.plain_result(f"群公告发布失败。可能的原因是权限不足或API错误。")
-            return
+            msg = f"群公告发布失败。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
 
     @filter.llm_tool(name="get_group_members_info")
     async def get_group_members(self, event: AstrMessageEvent) -> str:
