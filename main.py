@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v1.4.0"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.0.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -47,6 +47,101 @@ class MyPlugin(Star):
             }
         else:
             msg = "请引用要设置为精华的消息"
+            return {
+                "status": "error",
+                "message": msg
+            }
+        
+    @filter.llm_tool(name="delete_essence_msg")
+    async def delete_essence_msg(
+        self, event: AiocqhttpMessageEvent
+        ) -> dict:
+        """通过引用消息的方式将某条消息从群精华中移除"""
+        first_seg = event.get_messages()[0]
+        if isinstance(first_seg, Reply):
+            await event.bot.delete_essence_msg(message_id=int(first_seg.id))
+            msg = f"已将消息 {first_seg.id} 从群精华中移除"
+            return {
+                "status": "success",
+                "message": msg
+            }
+        else:
+            msg = "请引用要从精华中移除的消息"
+            return {
+                "status": "error",
+                "message": msg
+            }
+
+    @filter.llm_tool(name="delete_essence_msg_by_id")
+    async def delete_essence_msg_by_id(
+        self, event: AiocqhttpMessageEvent,message_id: str
+        ) -> dict:
+        """
+        通过输入消息id参数来将消息从群精华中移除。
+        Args:
+            message_id(string): 要移除的精华消息的消息ID，必定为一串数字，如(12345678)
+        """
+        try:
+            operator_name = event.get_sender_name()
+
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+
+            await event.bot.delete_essence_msg(
+                message_id=int(message_id)
+            )
+
+            logger.info(f"已将消息 {message_id} 从群精华中移除")
+            msg = f"已将消息 {message_id} 从群精华中移除"
+            return {
+                "status": "success",
+                "message": msg
+            }
+        except Exception as e:
+            logger.error(f"群精华消息移除，失败: {e}")
+            msg = f"群精华消息移除失败。可能的原因是权限不足、消息ID错误或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }        
+        
+    @filter.llm_tool(name="delete_msg")
+    async def delete_msg(
+        self, event: AiocqhttpMessageEvent
+        ) -> dict:
+        """撤回所引用的消息"""
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+                
+            first_seg = event.get_messages()[0]
+            if isinstance(first_seg, Reply):
+                await event.bot.delete_msg(message_id=int(first_seg.id))
+                msg = f"已将消息 {first_seg.id} 撤回"
+                return {
+                    "status": "success",
+                    "message": msg
+                }
+            else:
+                msg = "请引用要撤回的消息"
+                return {
+                    "status": "error",
+                    "message": msg
+                }
+        except Exception as e:    
+            logger.error(f"消息撤回，失败: {e}")
+            msg = f"消息撤回失败。可能的原因是权限不足或API错误。"
             return {
                 "status": "error",
                 "message": msg
@@ -303,6 +398,109 @@ class MyPlugin(Star):
                 "status": "error",
                 "message": msg
             }
+    
+    @filter.llm_tool(name="set_group_special_title")
+    async def set_group_special_title(
+        self, event: AiocqhttpMessageEvent, user_id: str, special_title: str
+    ) -> dict:
+        """
+        修改或取消群聊用户的群头衔
+        Args:
+            user_id(string): 要修改头衔的用户的QQ账号，必定为一串数字，如(12345678)
+            special_title(string): 要修改的头衔，如果为空值则取消群头衔
+        """
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+            
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+            
+            await event.bot.set_group_special_title(
+                group_id=int(group_id),
+                user_id=int(user_id),
+                special_title=special_title,
+            )
+            logger.info(f"用户：{user_id}的头衔已修改为：{special_title}")
+            
+            msg = f"用户 {user_id} 的头衔已修改为：{special_title}" if special_title else f"用户 {user_id} 的群头衔已取消"
+            return {
+                "status": "success",
+                "message": msg
+            }
+        except Exception as e:    
+            logger.error(f"用户：{user_id}的头衔修改，失败: {e}")
+            msg = f"操作失败：用户：{user_id}的头衔修改。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
+    
+    @filter.llm_tool(name="send_group_at_all")
+    async def send_group_at_all(self, event: AstrMessageEvent, reason: str) -> str:
+        """
+        用于向群聊发送 @全体成员 的指令。
+        Args:
+            reason(string): 发送 @全体成员 消息的理由，LLM需要将理由作为参数传入，以便在发送消息时附加说明,留空则不附加理由。
+        """
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+            if not group_id:
+                return json.dumps({"error": "当前环境不是群聊"})
+
+            if not isinstance(event, AiocqhttpMessageEvent):
+                return json.dumps({"error": f"不支持的平台: {event.get_platform_name()}"})
+
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+
+            message_data = [
+                {
+                    "type": "at", # 消息类型：艾特
+                    "data": {
+                        "qq": "all", # 关键点：这里是字符串 "all"，不是数字
+                        "name": "全体成员" # 备用显示名称
+                    }
+                },
+                {
+                "type": "text",
+                "data": {
+                    "text": f" {reason}" if reason else "" # 如果有理由则添加到消息中，前面加个空格分隔
+                }
+            }
+            ]
+
+            await event.bot.send_group_msg(
+                group_id=group_id,
+                message=message_data # 直接传入构造好的数组
+            )
+
+            reason_log = reason if reason else "未填写理由，只是单纯的 @全体成员"
+            
+            logger.info(f"已向群 {group_id} 发送 @全体成员 消息，理由：{reason_log}")
+            
+            msg = f"已向群 {group_id} 发送 @全体成员 消息，理由：{reason_log}"
+            
+            return {
+                "status": "success",
+                "message": msg
+            }
+        except Exception as e:    
+            logger.error(f"发送 @全体成员 消息，失败: {e}")
+            msg = f"发送 @全体成员 消息失败。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
 
     @filter.llm_tool(name="send_group_notice")
     async def send_group_notice(
@@ -337,6 +535,44 @@ class MyPlugin(Star):
         except Exception as e:    
             logger.error(f"群公告发布，失败: {e}")
             msg = f"群公告发布失败。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
+        
+    @filter.llm_tool(name="set_group_name")
+    async def set_group_name(
+        self, event: AiocqhttpMessageEvent, group_name: str
+    ) -> dict:
+        """
+        修改群名称
+        Args:
+            group_name(string): 要修改的群名称
+        """
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+            
+            await event.bot.set_group_name(
+                group_id=int(group_id),
+                group_name=group_name,
+            )
+            logger.info(f"群名称已修改：{group_name}")
+            msg = f"群名称已修改为：{group_name}"
+            return {
+                "status": "success",
+                "message": msg
+            }
+        except Exception as e:    
+            logger.error(f"群名称修改，失败: {e}")
+            msg = f"群名称修改失败。可能的原因是权限不足或API错误。"
             return {
                 "status": "error",
                 "message": msg
@@ -469,3 +705,89 @@ class MyPlugin(Star):
             
         except json.JSONDecodeError:
             yield event.plain_result(f"数据解析失败，原始数据：\n{result_str}")
+
+    @filter.llm_tool(name="get_essence_msg_list")
+    async def get_essence_msg_list(self, event: AstrMessageEvent) -> str:
+        """
+        1. 当用户需要查询群聊中的“精华消息”记录时调用此工具。
+        2. 返回的数据包含消息ID、发送者、操作者、操作时间以及消息内容。
+        3. 注意：此接口仅支持QQ群聊(aiocqhttp平台)。
+        """
+        start_time = time.time()
+        
+        try:
+            group_id = event.get_group_id()
+            if not group_id:
+                logger.info("用户在非群聊环境中调用获取精华消息工具")
+                return json.dumps({"error": "这不是群聊，无法获取精华消息"})
+            
+            if not isinstance(event, AiocqhttpMessageEvent):
+                logger.info(f"不支持的平台: {event.get_platform_name()}")
+                return json.dumps({"error": f"此功能仅支持QQ群聊(aiocqhttp平台)，当前平台为 {event.get_platform_name()}"})
+
+            # 调用内部API获取原始数据
+            raw_response = await self._get_essence_msg_list_internal(event)
+            
+            if not raw_response:
+                logger.info(f"群 {group_id} 暂无精华消息")
+                # 返回一个空列表的结构，而不是错误
+                return json.dumps({
+                    "group_id": group_id,
+                    "count": 0,
+                    "messages": []
+                }, ensure_ascii=False, indent=2)
+
+            # 2. 数据清洗与格式化 (列表推导式)
+            processed_messages = [
+                {
+                    "message_id": msg.get("message_id"),
+                    "sender_id": str(msg.get("sender_id")),       # ID转字符串，防止精度丢失
+                    "sender_nick": msg.get("sender_nick"),
+                    "operator_id": str(msg.get("operator_id")),   # ID转字符串
+                    "operator_nick": msg.get("operator_nick"),
+                    "operator_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg.get("operator_time"))),
+                    "content": msg.get("content")
+                }
+                for msg in raw_response if msg.get("message_id") and msg.get("sender_id") and msg.get("operator_id")
+            ]
+            
+            # 3. 构建最终响应
+            processed_data = {
+                "group_id": group_id,
+                "count": len(processed_messages),
+                "messages": processed_messages
+            }
+            
+            elapsed_time = time.time() - start_time
+            logger.info(f"成功获取群 {group_id} 的 {len(processed_messages)} 条精华消息，耗时 {elapsed_time:.2f}s")
+            
+            return json.dumps(processed_data, ensure_ascii=False, indent=2)
+            
+        except Exception as e:
+            elapsed_time = time.time() - start_time
+            logger.info(f"获取精华消息时发生错误: {e}，耗时 {elapsed_time:.2f}s")
+            return json.dumps({"error": f"获取精华消息时发生内部错误: {str(e)}"})
+
+    async def _get_essence_msg_list_internal(self, event: AiocqhttpMessageEvent) -> Optional[List[Dict[str, Any]]]:
+        """
+        内部函数，用于调用API获取群精华消息列表
+        
+        Args:
+            event: AiocqhttpMessageEvent实例
+            
+        Returns:
+            精华消息列表，失败时返回None
+        """
+        try:
+            group_id = event.get_group_id()
+            if not group_id:
+                return None
+
+            client = event.bot
+
+            params = {"group_id": group_id}
+               
+            return await client.api.call_action('get_essence_msg_list', **params)
+        except Exception as e:
+            logger.info(f"API调用失败: {e}")
+            return None

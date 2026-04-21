@@ -1,11 +1,18 @@
 # 更新日志 (CHANGELOG)
 
-# _V 1.4.0_
-- 优化代码结构，修复原本LLM调用工具，结果直接发送给用户而未返回给LLM的问题
-- 去除了工具调用后是否返回信息的配置开关，因为LLM收到工具调用结果后会触发回复
+# _V 2.0.0_ 解决ISSUE：[SatenShiroya/astrbot_plugin_llm_qqgroupTools#5](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/5)  
+- 新增设置群聊名称功能
+- 新增获取群精华API，以及通过引用或者描述内容的方式来取消群精华消息的功能
+- 新增修改群成员头衔的功能
+- 新增通过引用来撤回消息的功能
+- 新增@全体成员 的功能，单纯的@或者@后让bot附上理由都可以
 
 <details>
 <summary>📋 点击查看历史更新日志</summary>
+
+- ### _V 1.4.0_
+  - 优化代码结构，修复原本LLM调用工具，结果直接发送给用户而未返回给LLM的问题
+  - 去除了工具调用后是否返回信息的配置开关，因为LLM收到工具调用结果后会触发回复
 
 - ### _V 1.3.0_
   - 新增自主禁言工具'set_group_ban_byself'，已修复原本失效的自主禁言功能。需要用户在AI人格设定中强调和原本禁言功能的区别和使用场景。

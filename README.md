@@ -6,7 +6,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-V1.4.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V2.0.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -49,16 +49,29 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 |------|----------|----------|
 | 禁言 | 让AI禁言某用户，时间可以口语化指定，当然也可用让AI解除禁言 | 'set_group_ban' |
 | 自主禁言 | AI自主决定禁言某用户， | 'set_group_ban_byself' |
+| 撤回 | 撤回一条消息，必须引用一条消息 | 'delete_msg' |
 | 踢人 | 从群聊移除某人 | 'set_group_kick' |
 | 全群禁言 | 开启或关闭本群的全体禁言 | 'set_group_whole_ban' |
 | 发布群公告 | 在本群发公告，内容可以让AI自拟 | 'send_group_notice' |
-| 改群名片 | 修改用户昵称 | 'set_group_card' |
+| 改群名片 | 修改群用户昵称 | 'set_group_card' |
+| 改群名 | 修改群聊名称 | 'set_group_name' |
+| 改用户头衔 | 修改群用户头衔 | 'set_group_special_title' |
 | 设精 | 群发言设精华，必须引用一条消息 | 'set_essence_msg' |
+| 取消设精 | 取消群精华消息，必须引用一条消息 | 'delete_essence_msg' |
+| 通过描述取消设精 | 通过描述消息内容或者消息所属成员又或者设精消息的人员来取消群精华消息 | 'delete_essence_msg_by_id' |
+| @全体成员 | @全体成员并发送原因，留空则不发送原因 | 'send_group_at_all' |
 | 点赞 | 点赞某用户的名片 | 'send_like' |
 
 ## 📝 _版本变更履历_
 <details>
 <summary style="padding-left: 1.6em;"><em>点此展开显示</em></summary>
+
+- ### _V 2.0.0_ 解决ISSUE：[SatenShiroya/astrbot_plugin_llm_qqgroupTools#5](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/5)  
+  - 新增设置群聊名称功能
+  - 新增获取群精华API，以及通过引用或者描述内容的方式来取消群精华消息的功能
+  - 新增修改群成员头衔的功能
+  - 新增通过引用来撤回消息的功能
+  - 新增@全体成员 的功能，单纯的@或者@后让bot附上理由都可以
 
 - ### _V 1.4.0_
   - 优化代码结构，修复原本LLM调用工具，结果直接发送给用户而未返回给LLM的问题
