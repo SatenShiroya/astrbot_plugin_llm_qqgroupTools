@@ -17,8 +17,17 @@ async def check_group_and_permission(
         - 如果无权限或不在群聊，返回 (False, "错误信息")
     """
     group_id = event.get_group_id()
+    self_id = event.get_self_id()
     if not group_id:
         return False, "此操作仅可在群聊中进行。"
+
+    bot_member_info = await event.bot.get_group_member_info(
+        group_id=group_id,
+        user_id=self_id
+    )
+    bot_role = bot_member_info.get('role', 'member')
+    if bot_role not in ['owner', 'admin']:
+        return False, "机器人权限不足，无法执行操作。请确保机器人在群内具有群主或管理员权限。"
 
     operator_user_id = event.get_sender_id()
     has_permission = False
@@ -40,5 +49,5 @@ async def check_group_and_permission(
 
     if not has_permission:
         return False, f"用户 {operator_name} 权限不足"
-
+    
     return True, None

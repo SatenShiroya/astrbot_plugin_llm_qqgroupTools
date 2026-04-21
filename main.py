@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.0.0"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.1.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -37,16 +37,34 @@ class MyPlugin(Star):
         self, event: AiocqhttpMessageEvent
         ) -> dict:
         """将引用消息添加到群精华"""
-        first_seg = event.get_messages()[0]
-        if isinstance(first_seg, Reply):
-            await event.bot.set_essence_msg(message_id=int(first_seg.id))
-            msg = f"已将消息 {first_seg.id} 添加到群精华"
-            return {
-                "status": "success",
-                "message": msg
-            }
-        else:
-            msg = "请引用要设置为精华的消息"
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+                
+            first_seg = event.get_messages()[0]
+            if isinstance(first_seg, Reply):
+                await event.bot.set_essence_msg(message_id=int(first_seg.id))
+                msg = f"已将消息 {first_seg.id} 添加到群精华"
+                return {
+                    "status": "success",
+                    "message": msg
+                }
+            else:
+                msg = "请引用要设置为精华的消息"
+                return {
+                    "status": "error",
+                    "message": msg
+                }
+        except Exception as e:    
+            logger.error(f"群精华消息添加，失败: {e}")
+            msg = f"群精华消息添加失败。可能的原因是权限不足、消息ID错误或API错误。"
             return {
                 "status": "error",
                 "message": msg
@@ -57,16 +75,35 @@ class MyPlugin(Star):
         self, event: AiocqhttpMessageEvent
         ) -> dict:
         """通过引用消息的方式将某条消息从群精华中移除"""
-        first_seg = event.get_messages()[0]
-        if isinstance(first_seg, Reply):
-            await event.bot.delete_essence_msg(message_id=int(first_seg.id))
-            msg = f"已将消息 {first_seg.id} 从群精华中移除"
-            return {
-                "status": "success",
-                "message": msg
-            }
-        else:
-            msg = "请引用要从精华中移除的消息"
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+            
+                
+            first_seg = event.get_messages()[0]
+            if isinstance(first_seg, Reply):
+                await event.bot.delete_essence_msg(message_id=int(first_seg.id))
+                msg = f"已将消息 {first_seg.id} 从群精华中移除"
+                return {
+                    "status": "success",
+                    "message": msg
+                }
+            else:
+                msg = "请引用要移除的精华消息"
+                return {
+                    "status": "error",
+                    "message": msg
+                }
+        except Exception as e:    
+            logger.error(f"群精华消息移除，失败: {e}")
+            msg = f"群精华消息移除失败。可能的原因是权限不足、消息ID错误或API错误。"
             return {
                 "status": "error",
                 "message": msg

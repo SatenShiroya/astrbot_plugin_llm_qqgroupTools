@@ -6,7 +6,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-V2.0.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V2.1.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -66,7 +66,11 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 <details>
 <summary style="padding-left: 1.6em;"><em>点此展开显示</em></summary>
 
-- ### _V 2.0.0_ 解决ISSUE：[SatenShiroya/astrbot_plugin_llm_qqgroupTools#5](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/5)  
+- ### _V 2.1.0_ 解决ISSUE：[[Bug]当bot没有设精权限时仍返回成功的结果 #6](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/6)  
+  - 给引用设精和取消设精功能增加bot权限校验，解决bot没有权限时依然返回成功的问题
+  - 权限验证模块新增机器人权限校验，使得机器人非管理员或者群主时，能反馈正确的权限状态给LLM
+
+- ### _V 2.0.0_ 解决ISSUE：[[Feature]希望增加下列工具 #5](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/5)  
   - 新增设置群聊名称功能
   - 新增获取群精华API，以及通过引用或者描述内容的方式来取消群精华消息的功能
   - 新增修改群成员头衔的功能

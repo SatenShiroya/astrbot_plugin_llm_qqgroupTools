@@ -1,14 +1,18 @@
 # 更新日志 (CHANGELOG)
 
-# _V 2.0.0_ 解决ISSUE：[SatenShiroya/astrbot_plugin_llm_qqgroupTools#5](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/5)  
-- 新增设置群聊名称功能
-- 新增获取群精华API，以及通过引用或者描述内容的方式来取消群精华消息的功能
-- 新增修改群成员头衔的功能
-- 新增通过引用来撤回消息的功能
-- 新增@全体成员 的功能，单纯的@或者@后让bot附上理由都可以
+# _V 2.1.0_ 解决ISSUE：[[Bug]当bot没有设精权限时仍返回成功的结果 #6](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/6)  
+- 给引用设精和取消设精功能增加bot权限校验，解决bot没有权限时依然返回成功的问题
+- 权限验证模块新增机器人权限校验，使得机器人非管理员或者群主时，能反馈正确的权限状态给LLM
 
 <details>
 <summary>📋 点击查看历史更新日志</summary>
+
+- ### _V 2.0.0_ 解决ISSUE：[[Feature]希望增加下列工具 #5](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/5)  
+  - 新增设置群聊名称功能
+  - 新增获取群精华API，以及通过引用或者描述内容的方式来取消群精华消息的功能
+  - 新增修改群成员头衔的功能
+  - 新增通过引用来撤回消息的功能
+  - 新增@全体成员 的功能，单纯的@或者@后让bot附上理由都可以
 
 - ### _V 1.4.0_
   - 优化代码结构，修复原本LLM调用工具，结果直接发送给用户而未返回给LLM的问题
