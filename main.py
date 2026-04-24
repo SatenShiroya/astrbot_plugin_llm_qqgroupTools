@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.1.0"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.2.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -449,13 +449,47 @@ class MyPlugin(Star):
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
-            
-            if self.Permission_verification:
-                has_perm, error_msg = await check_group_and_permission(
-                    event, self.allow_groupadmin_use, operator_name
-                )
-                if not has_perm:
-                    return {"status": "error", "message": error_msg}
+            operator_user_id = event.get_sender_id()
+            self_id = event.get_self_id()
+
+            if not group_id:
+                return False, "此操作仅可在群聊中进行。"
+
+            bot_member_info = await event.bot.get_group_member_info(
+                group_id=group_id,
+                user_id=self_id
+            )
+            bot_role = bot_member_info.get('role', 'member')
+            if bot_role not in ['owner']:
+                msg = f"机器人权限不足，无法执行操作。请确保机器人在群内具有群主权限。"
+                return {
+                    "status": "error", 
+                    "message": msg
+                }
+
+            has_permission = False
+
+            if self.allow_groupadmin_use:
+                try:
+                    group_member_info = await event.bot.get_group_member_info(
+                        group_id=group_id,
+                        user_id=operator_user_id
+                    )
+                    role = group_member_info.get('role', 'member')
+                    if role in ['owner', 'admin']:
+                        has_permission = True
+                except Exception:
+                        has_permission = False  # 获取失败视为无权限
+
+                if not has_permission and event.is_admin():
+                    has_permission = True
+
+                if not has_permission:
+                    msg = f"用户 {operator_name} 权限不足，无法执行操作。请确保操作者在群内具有群主或管理员权限。"
+                    return {
+                        "status": "error",
+                        "message": msg
+                    }
             
             await event.bot.set_group_special_title(
                 group_id=int(group_id),
@@ -472,6 +506,81 @@ class MyPlugin(Star):
         except Exception as e:    
             logger.error(f"用户：{user_id}的头衔修改，失败: {e}")
             msg = f"操作失败：用户：{user_id}的头衔修改。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
+
+    @filter.llm_tool(name="set_group_admin")
+    async def set_group_admin(
+        self, event: AiocqhttpMessageEvent, user_id: str, enable: bool
+    ) -> dict:
+        """
+        设置或取消群聊用户的群管理员权限
+        Args:
+            user_id(string): 要修改管理员权限的用户的QQ账号，必定为一串数字，如(12345678)
+            enable(bool): 是否启用管理员权限，设置为true时授予管理员权限，设置为false时取消管理员权限，布尔类型参数
+        """
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+            operator_user_id = event.get_sender_id()
+            self_id = event.get_self_id()
+
+            if not group_id:
+                return False, "此操作仅可在群聊中进行。"
+
+            bot_member_info = await event.bot.get_group_member_info(
+                group_id=group_id,
+                user_id=self_id
+            )
+            bot_role = bot_member_info.get('role', 'member')
+            if bot_role not in ['owner']:
+                msg = f"机器人权限不足，无法执行操作。请确保机器人在群内具有群主权限。"
+                return {
+                    "status": "error", 
+                    "message": msg
+                }
+
+            has_permission = False
+
+            if self.allow_groupadmin_use:
+                try:
+                    group_member_info = await event.bot.get_group_member_info(
+                        group_id=group_id,
+                        user_id=operator_user_id
+                    )
+                    role = group_member_info.get('role', 'member')
+                    if role in ['owner', 'admin']:
+                        has_permission = True
+                except Exception:
+                        has_permission = False  # 获取失败视为无权限
+
+                if not has_permission and event.is_admin():
+                    has_permission = True
+
+                if not has_permission:
+                    msg = f"用户 {operator_name} 权限不足，无法执行操作。请确保操作者在群内具有群主或管理员权限。"
+                    return {
+                        "status": "error",
+                        "message": msg
+                    }
+            
+            await event.bot.set_group_admin(
+                group_id=int(group_id),
+                user_id=int(user_id),
+                enable=enable
+            )
+            logger.info(f"用户：{user_id}的管理员权限已修改为：{enable}")
+            
+            msg = f"用户 {user_id} 的管理员权限已修改为：{enable}"
+            return {
+                "status": "success",
+                "message": msg
+            }
+        except Exception as e:    
+            logger.error(f"用户：{user_id}的管理员权限修改，失败: {e}")
+            msg = f"操作失败：用户：{user_id}的管理员权限修改。可能的原因是权限不足或API错误。"
             return {
                 "status": "error",
                 "message": msg
@@ -576,6 +685,44 @@ class MyPlugin(Star):
                 "status": "error",
                 "message": msg
             }
+
+    @filter.llm_tool(name="delete_group_notice")
+    async def delete_group_notice(
+        self, event: AiocqhttpMessageEvent, notice_id: str
+    ) -> dict:
+        """
+        删除一条群公告
+        Args:
+            notice_id(string): 要删除的群公告ID
+        """
+        try:
+            group_id = event.get_group_id()
+            operator_name = event.get_sender_name()
+
+            if self.Permission_verification:
+                has_perm, error_msg = await check_group_and_permission(
+                    event, self.allow_groupadmin_use, operator_name
+                )
+                if not has_perm:
+                    return {"status": "error", "message": error_msg}
+
+            await event.bot._del_group_notice(
+                group_id=int(group_id),
+                notice_id=notice_id,
+            )
+            logger.info(f"群公告已删除：{notice_id}")
+            msg = f"群公告已删除：{notice_id}"
+            return {
+                "status": "success",
+                "message": msg
+            }
+        except Exception as e:
+            logger.error(f"群公告删除，失败: {e}")
+            msg = f"群公告删除失败。可能的原因是权限不足或API错误。"
+            return {
+                "status": "error",
+                "message": msg
+            }
         
     @filter.llm_tool(name="set_group_name")
     async def set_group_name(
@@ -665,84 +812,6 @@ class MyPlugin(Star):
             logger.info(f"获取群成员信息时发生错误: {e}，耗时 {elapsed_time:.2f}s")
             return json.dumps({"error": f"获取群成员信息时发生内部错误: {str(e)}"})
 
-    async def _get_group_members_internal(self, event: AiocqhttpMessageEvent) -> Optional[List[Dict[str, Any]]]:
-        """
-        内部函数，用于调用API获取群成员列表
-        
-        Args:
-            event: AiocqhttpMessageEvent实例
-            
-        Returns:
-            群成员列表，失败时返回None
-        """
-        try:
-            group_id = event.get_group_id()
-            if not group_id:
-                return None
-
-            client = event.bot
-            params = {"group_id": group_id}
-            return await client.api.call_action('get_group_member_list', **params)
-        except Exception as e:
-            logger.info(f"API调用失败: {e}")
-            return None
-
-    @filter.command("测试群成员", alias={"test_members"})
-    async def test_group_members(self, event: AstrMessageEvent) -> AsyncGenerator[MessageEventResult, None]:
-        """测试指令：手动触发群成员查询并显示格式化结果（限制显示前300个成员）"""
-        if not event.get_group_id():
-            yield event.plain_result("此指令仅在群聊中可用")
-            return
-        start_time = time.time()
-
-        logger.info("手动触发群成员查询测试")
-        result_str = await self.get_group_members(event)
-        
-        try:
-            result_data = json.loads(result_str)
-            if "error" in result_data:
-                yield event.plain_result(f"查询失败: {result_data['error']}")
-                return
-            
-            members = result_data.get("members", [])
-            if not members:
-                yield event.plain_result("群成员列表为空")
-                return
-            
-            # 限制显示数量，避免消息过长
-            display_limit = 300
-            display_members = members[:display_limit]
-            elapsed_time = time.time() - start_time
-
-            # 格式化输出：群昵称(用户名)(userid)[身份]
-            formatted_members = []
-            for member in display_members:
-                display_name = member.get("display_name", "未知")
-                username = member.get("username", "未知")  # 新增：显示用户名
-                user_id = member.get("user_id", "未知")
-                role = member.get("role", "member")
-                
-                # 角色中文化
-                role_map = {
-                    "owner": "群主",
-                    "admin": "管理", 
-                    "member": "成员"
-                }
-                role_cn = role_map.get(role, role)
-                
-                formatted_members.append(f"{display_name}({username})({user_id})[{role_cn}]")
-            
-            # 构建结果消息
-            result_text = f"该命令仅用于测试工具可用性\n工具调用耗时 {elapsed_time:.2f}s\n\n群成员信息 (共{len(members)}人，显示前{len(display_members)}人):\n" + "\n".join(formatted_members)
-            
-            if len(members) > display_limit:
-                result_text += f"\n\n注：群成员过多，仅显示前{display_limit}人。该命令仅用于测试工具可用性\n工具调用耗时 {elapsed_time:.2f}s"
-            
-            yield event.plain_result(result_text)
-            
-        except json.JSONDecodeError:
-            yield event.plain_result(f"数据解析失败，原始数据：\n{result_str}")
-
     @filter.llm_tool(name="get_essence_msg_list")
     async def get_essence_msg_list(self, event: AstrMessageEvent) -> str:
         """
@@ -804,6 +873,107 @@ class MyPlugin(Star):
             elapsed_time = time.time() - start_time
             logger.info(f"获取精华消息时发生错误: {e}，耗时 {elapsed_time:.2f}s")
             return json.dumps({"error": f"获取精华消息时发生内部错误: {str(e)}"})
+    
+    @filter.llm_tool(name="get_group_notice")
+    async def get_group_notice(self, event: AstrMessageEvent) -> str:
+        """
+        1. 当用户需要查询群聊中的“群公告”记录时调用此工具。
+        2. 返回的数据包含公告ID、发送者ID、发送时间以及公告内容。
+        3. 注意：此接口仅支持QQ群聊(aiocqhttp平台)。
+        """
+        start_time = time.time()
+        
+        try:
+            group_id = event.get_group_id()
+            if not group_id:
+                logger.info("用户在非群聊环境中调用获取群公告工具")
+                return json.dumps({"error": "这不是群聊，无法获取群公告"})
+            
+            if not isinstance(event, AiocqhttpMessageEvent):
+                logger.info(f"不支持的平台: {event.get_platform_name()}")
+                return json.dumps({"error": f"此功能仅支持QQ群聊(aiocqhttp平台)，当前平台为 {event.get_platform_name()}"})
+
+            # 调用内部API获取原始数据
+            raw_response = await self._get_group_notice(event)
+
+            if not raw_response:
+                logger.info(f"群 {group_id} 暂无群公告")
+                # 返回一个空列表的结构，而不是错误
+                return json.dumps({
+                    "group_id": group_id,
+                    "count": 0,
+                    "messages": []
+                }, ensure_ascii=False, indent=2)
+
+            # 2. 数据清洗与格式化 (列表推导式)
+            processed_messages = []
+            for msg in raw_response:
+                if not (msg.get("notice_id") and msg.get("sender_id") and msg.get("publish_time")):
+                    continue
+
+                # 处理图片列表
+                images = msg.get("message", {}).get("image")
+                if isinstance(images, list):
+                    image_data = [
+                        {
+                            "id": img.get("id"),
+                            "height": img.get("height"),
+                            "width": img.get("width")
+                        }
+                        for img in images if img.get("id")   # 只保留有效项
+                    ]
+                else:
+                    image_data = []
+
+                processed_messages.append({
+                    "notice_id": msg.get("notice_id"),
+                    "sender_id": msg.get("sender_id"),   # 转为字符串，防止精度丢失
+                    "publish_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg.get("publish_time"))),
+                    "message": {
+                        "text": msg.get("message", {}).get("text", ""),
+                        "images": image_data               # 使用 images (复数) 返回列表
+                    }
+                })
+            
+            # 3. 构建最终响应
+            processed_data = {
+                "group_id": group_id,
+                "count": len(processed_messages),
+                "messages": processed_messages
+            }
+            
+            elapsed_time = time.time() - start_time
+            logger.info(f"成功获取群 {group_id} 的 {len(processed_messages)} 条群公告，耗时 {elapsed_time:.2f}s")
+            
+            return json.dumps(processed_data, ensure_ascii=False, indent=2)
+            
+        except Exception as e:
+            elapsed_time = time.time() - start_time
+            logger.info(f"获取群公告时发生错误: {e}，耗时 {elapsed_time:.2f}s")
+            return json.dumps({"error": f"获取群公告时发生内部错误: {str(e)}"})
+
+
+    async def _get_group_members_internal(self, event: AiocqhttpMessageEvent) -> Optional[List[Dict[str, Any]]]:
+        """
+        内部函数，用于调用API获取群成员列表
+        
+        Args:
+            event: AiocqhttpMessageEvent实例
+            
+        Returns:
+            群成员列表，失败时返回None
+        """
+        try:
+            group_id = event.get_group_id()
+            if not group_id:
+                return None
+
+            client = event.bot
+            params = {"group_id": group_id}
+            return await client.api.call_action('get_group_member_list', **params)
+        except Exception as e:
+            logger.info(f"API调用失败: {e}")
+            return None
 
     async def _get_essence_msg_list_internal(self, event: AiocqhttpMessageEvent) -> Optional[List[Dict[str, Any]]]:
         """
@@ -825,6 +995,30 @@ class MyPlugin(Star):
             params = {"group_id": group_id}
                
             return await client.api.call_action('get_essence_msg_list', **params)
+        except Exception as e:
+            logger.info(f"API调用失败: {e}")
+            return None
+
+    async def _get_group_notice(self, event: AiocqhttpMessageEvent) -> Optional[List[Dict[str, Any]]]:
+        """
+        内部函数，用于调用API获取群公告列表
+        
+        Args:
+            event: AiocqhttpMessageEvent实例
+            
+        Returns:
+            群公告列表，失败时返回None
+        """
+        try:
+            group_id = event.get_group_id()
+            if not group_id:
+                return None
+
+            client = event.bot
+
+            params = {"group_id": group_id}
+               
+            return await client.api.call_action('_get_group_notice', **params)
         except Exception as e:
             logger.info(f"API调用失败: {e}")
             return None

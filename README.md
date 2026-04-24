@@ -6,7 +6,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-V2.1.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V2.2.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -53,6 +53,8 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 | 踢人 | 从群聊移除某人 | 'set_group_kick' |
 | 全群禁言 | 开启或关闭本群的全体禁言 | 'set_group_whole_ban' |
 | 发布群公告 | 在本群发公告，内容可以让AI自拟 | 'send_group_notice' |
+| 删除群公告 | 让AI自主删除对应内容的群公告 | 'delete_group_notice' |
+| 设置管理员 | 让AI设置或取消群聊用户的管理员权限 | 'set_group_admin' |
 | 改群名片 | 修改群用户昵称 | 'set_group_card' |
 | 改群名 | 修改群聊名称 | 'set_group_name' |
 | 改用户头衔 | 修改群用户头衔 | 'set_group_special_title' |
@@ -62,9 +64,18 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 | @全体成员 | @全体成员并发送原因，留空则不发送原因 | 'send_group_at_all' |
 | 点赞 | 点赞某用户的名片 | 'send_like' |
 
+## 🔜 _未来计划~随缘更新，完成时间待定(尽量上半年内)_
+- [ ]解耦代码，为后续其余功能新增做准备
+- [ ]群文件相关管理
+
 ## 📝 _版本变更履历_
 <details>
 <summary style="padding-left: 1.6em;"><em>点此展开显示</em></summary>
+
+- ### _V 2.2.0_ 
+  - 新增了删除群公告的功能
+  - 新增了设置管理员的功能
+  - 修复使用只有群主可用功能时，机器人为管理员身份时依然能通过权限判断的问题
 
 - ### _V 2.1.0_ 解决ISSUE：[[Bug]当bot没有设精权限时仍返回成功的结果 #6](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/issues/6)  
   - 给引用设精和取消设精功能增加bot权限校验，解决bot没有权限时依然返回成功的问题
