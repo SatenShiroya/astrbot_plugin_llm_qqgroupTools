@@ -6,7 +6,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-V2.2.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V2.3.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -71,6 +71,13 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 ## 📝 _版本变更履历_
 <details>
 <summary style="padding-left: 1.6em;"><em>点此展开显示</em></summary>
+
+- ### _V 2.3.0_ 
+  - 修复了某些情况下设置管理员和头衔功能会产生严重越权的问题
+  - 对设置头衔功能新增：普通用户也可以请求群主机器人设置头衔，但仅限自己
+  - 修复了某些函数返回类型不一致的问题
+  - 为点赞和禁言功能的实际次数和时长做了限制和校验
+  - 修复了某些情况下敏感信息可能会泄露给LLM的问题
 
 - ### _V 2.2.0_ 
   - 新增了删除群公告的功能

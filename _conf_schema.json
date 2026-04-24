@@ -9,14 +9,14 @@
   "Permission_verification": {
     "type": "bool",
     "description": "开启权限验证功能",
-    "hint": "开启后，某些敏感功能将校验操作者权限，防止普通群成员滥用",
+    "hint": "开启后，某些敏感功能将校验操作者权限，防止普通群成员滥用功能，强烈建议开启，如果不开启，请确保群成员都值得信任",
     "default": true
   },
   
   "allow_groupadmin_use": {
     "type": "bool",
     "description": "允许群主或者管理员使用机器人管理功能",
-    "hint": "开启后让bot不仅让bot由机器人管理员使用，群聊群主和管理员也可以使用,只有上方权限验证功能开启时该选项才有效",
+    "hint": "开启后让bot不仅让bot由机器人超级管理员使用，群聊群主和管理员也可以使用,只有上方权限验证功能开启时该选项才有效",
     "default": false
   }
 }

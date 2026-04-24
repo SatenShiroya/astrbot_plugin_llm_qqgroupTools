@@ -1,7 +1,7 @@
 name: astrbot_plugin_llm_qqgroupTools # 插件标识符
 display_name: AI自主管群 # 用于展示的名字
 desc: 允许AI自主管理群聊，包括全群禁言和设置群成员名片等功能，当然也可以命令它 # 插件描述
-version: V2.2.0 # 插件版本
+version: V2.3.0 # 插件版本
 author: SatenShiroya # 作者
 support_platforms:
   - aiocqhttp

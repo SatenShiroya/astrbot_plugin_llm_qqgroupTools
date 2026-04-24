@@ -10,7 +10,7 @@ from astrbot.core.star.star_tools import StarTools
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.2.0"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.3.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -195,6 +195,7 @@ class MyPlugin(Star):
             times(number): 点赞的次数，最大为10次
         """
         try:
+            times = min(max(1, times), 10)
             await event.bot.send_like(
                 user_id=user_id,
                 times=times,
@@ -207,7 +208,7 @@ class MyPlugin(Star):
             }
         except Exception as e:
             logger.error(f"点赞用户：{user_id}， 失败: {e}")
-            msg=f"点赞用户：{user_id}， 失败: {e}"
+            msg=f"点赞用户：{user_id}失败。可能的原因是用户ID错误或API错误。"
             return {
                 "status": "error",
                 "message": msg
@@ -230,7 +231,7 @@ class MyPlugin(Star):
             operator_name = event.get_sender_name()
             target_user_id = user_id  # 被禁言的目标用户ID
             target_user_name = user_name  # 被禁言的目标用户昵称
-
+            duration = (duration // 60) * 60
             # 对目标用户执行禁言操作
             await event.bot.set_group_ban(
                 group_id=int(group_id), 
@@ -270,14 +271,13 @@ class MyPlugin(Star):
             operator_name = event.get_sender_name()
             target_user_id = user_id  # 被禁言的目标用户ID
             target_user_name = user_name  # 被禁言的目标用户昵称
-
+            duration = (duration // 60) * 60
             if self.Permission_verification:
                 has_perm, error_msg = await check_group_and_permission(
                     event, self.allow_groupadmin_use, operator_name
                 )
                 if not has_perm:
                     return {"status": "error", "message": error_msg}
-
             # 对目标用户执行禁言操作
             await event.bot.set_group_ban(
                 group_id=int(group_id), 
@@ -453,7 +453,11 @@ class MyPlugin(Star):
             self_id = event.get_self_id()
 
             if not group_id:
-                return False, "此操作仅可在群聊中进行。"
+                msg = f"此操作仅可在群聊中进行。"
+                return {
+                    "status": "error",
+                    "message": msg
+                }
 
             bot_member_info = await event.bot.get_group_member_info(
                 group_id=group_id,
@@ -467,29 +471,36 @@ class MyPlugin(Star):
                     "message": msg
                 }
 
-            has_permission = False
-
-            if self.allow_groupadmin_use:
-                try:
-                    group_member_info = await event.bot.get_group_member_info(
-                        group_id=group_id,
-                        user_id=operator_user_id
-                    )
-                    role = group_member_info.get('role', 'member')
-                    if role in ['owner', 'admin']:
-                        has_permission = True
-                except Exception:
-                        has_permission = False  # 获取失败视为无权限
+            if self.Permission_verification:
+                has_permission = False
+                if self.allow_groupadmin_use:
+                    try:
+                        group_member_info = await event.bot.get_group_member_info(
+                            group_id=group_id,
+                            user_id=operator_user_id
+                        )
+                        role = group_member_info.get('role', 'member')
+                        if role in ['owner', 'admin']:
+                            has_permission = True
+                    except Exception:
+                            has_permission = False  # 获取失败视为无权限
 
                 if not has_permission and event.is_admin():
                     has_permission = True
-
+                
                 if not has_permission:
-                    msg = f"用户 {operator_name} 权限不足，无法执行操作。请确保操作者在群内具有群主或管理员权限。"
-                    return {
-                        "status": "error",
-                        "message": msg
-                    }
+                    # 检查操作者是否在给自己设置头衔
+                    if operator_user_id == user_id:
+                        # 注意：这里不需要额外权限，因为是在改自己的头衔
+                        has_permission = True
+                        logger.info(f"用户 {operator_name} 正在为自己设置头衔（自操作豁免）")
+                    else:
+                        # 既不是管理员，也不是给自己改，拒绝
+                        msg = f"用户 {operator_name} 权限不足，只能修改自己的头衔。"
+                        return {
+                            "status": "error", 
+                            "message": msg
+                        }
             
             await event.bot.set_group_special_title(
                 group_id=int(group_id),
@@ -528,7 +539,11 @@ class MyPlugin(Star):
             self_id = event.get_self_id()
 
             if not group_id:
-                return False, "此操作仅可在群聊中进行。"
+                msg = f"此操作仅可在群聊中进行。"
+                return {
+                    "status": "error",
+                    "message": msg
+                }
 
             bot_member_info = await event.bot.get_group_member_info(
                 group_id=group_id,
@@ -542,19 +557,19 @@ class MyPlugin(Star):
                     "message": msg
                 }
 
-            has_permission = False
-
-            if self.allow_groupadmin_use:
-                try:
-                    group_member_info = await event.bot.get_group_member_info(
-                        group_id=group_id,
-                        user_id=operator_user_id
-                    )
-                    role = group_member_info.get('role', 'member')
-                    if role in ['owner', 'admin']:
-                        has_permission = True
-                except Exception:
-                        has_permission = False  # 获取失败视为无权限
+            if self.Permission_verification:
+                has_permission = False
+                if self.allow_groupadmin_use:
+                    try:
+                        group_member_info = await event.bot.get_group_member_info(
+                            group_id=group_id,
+                            user_id=operator_user_id
+                        )
+                        role = group_member_info.get('role', 'member')
+                        if role in ['owner', 'admin']:
+                            has_permission = True
+                    except Exception:
+                            has_permission = False  # 获取失败视为无权限
 
                 if not has_permission and event.is_admin():
                     has_permission = True
@@ -587,7 +602,7 @@ class MyPlugin(Star):
             }
     
     @filter.llm_tool(name="send_group_at_all")
-    async def send_group_at_all(self, event: AstrMessageEvent, reason: str) -> str:
+    async def send_group_at_all(self, event: AstrMessageEvent, reason: str) -> dict:
         """
         用于向群聊发送 @全体成员 的指令。
         Args:
@@ -597,10 +612,10 @@ class MyPlugin(Star):
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
             if not group_id:
-                return json.dumps({"error": "当前环境不是群聊"})
+                return {"status": "error", "message": "当前环境不是群聊"}
 
             if not isinstance(event, AiocqhttpMessageEvent):
-                return json.dumps({"error": f"不支持的平台: {event.get_platform_name()}"})
+                return {"status": "error", "message": f"不支持的平台: {event.get_platform_name()}"}
 
             if self.Permission_verification:
                 has_perm, error_msg = await check_group_and_permission(
@@ -927,7 +942,7 @@ class MyPlugin(Star):
 
                 processed_messages.append({
                     "notice_id": msg.get("notice_id"),
-                    "sender_id": msg.get("sender_id"),   # 转为字符串，防止精度丢失
+                    "sender_id": str(msg.get("sender_id")),   # 转为字符串，防止精度丢失
                     "publish_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg.get("publish_time"))),
                     "message": {
                         "text": msg.get("message", {}).get("text", ""),
