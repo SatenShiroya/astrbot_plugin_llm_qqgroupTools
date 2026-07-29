@@ -7,6 +7,7 @@ from astrbot.api import logger, AstrBotConfig
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
 from astrbot.core.star.star_tools import StarTools
 
+from .core.event_utils import unwrap_event
 from .core.permission_utils import check_group_and_permission
 
 @register(
@@ -37,6 +38,7 @@ class MyPlugin(Star):
         self, event: AiocqhttpMessageEvent
         ) -> dict:
         """将引用消息添加到群精华"""
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -75,6 +77,7 @@ class MyPlugin(Star):
         self, event: AiocqhttpMessageEvent
         ) -> dict:
         """通过引用消息的方式将某条消息从群精华中移除"""
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -118,6 +121,7 @@ class MyPlugin(Star):
         Args:
             message_id(string): 要移除的精华消息的消息ID，必定为一串数字，如(12345678)
         """
+        event = unwrap_event(event)
         try:
             operator_name = event.get_sender_name()
 
@@ -151,6 +155,7 @@ class MyPlugin(Star):
         self, event: AiocqhttpMessageEvent
         ) -> dict:
         """撤回所引用的消息"""
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -194,6 +199,7 @@ class MyPlugin(Star):
             user_id(string): 要点赞的用户的QQ账号，必定为一串数字，如(12345678)
             times(number): 点赞的次数，最大为10次
         """
+        event = unwrap_event(event)
         try:
             times = min(max(1, times), 10)
             await event.bot.send_like(
@@ -225,12 +231,12 @@ class MyPlugin(Star):
             user_name(string): 要禁言的用户的QQ昵称，如(小明)
             duration(number): 禁言持续时间（以秒为单位），必须是 60 的倍数（例如：60、180）。设置为 0 即解除禁言
         """
+        event = unwrap_event(event)
+        target_user_id = user_id
+        target_user_name = user_name
         try:
             group_id = event.get_group_id()
             self_id = event.get_self_id()
-            operator_name = event.get_sender_name()
-            target_user_id = user_id  # 被禁言的目标用户ID
-            target_user_name = user_name  # 被禁言的目标用户昵称
             duration = (duration // 60) * 60
             # 对目标用户执行禁言操作
             await event.bot.set_group_ban(
@@ -265,12 +271,14 @@ class MyPlugin(Star):
             user_name(string): 要禁言的用户的QQ昵称，如(小明)
             duration(number): 禁言持续时间（以秒为单位），必须是 60 的倍数（例如：60、180）。设置为 0 即解除禁言
         """
+        event = unwrap_event(event)
+        target_user_id = user_id
+        target_user_name = user_name
+        operator_name = "未知操作者"
         try:
             group_id = event.get_group_id()
             self_id = event.get_self_id()
             operator_name = event.get_sender_name()
-            target_user_id = user_id  # 被禁言的目标用户ID
-            target_user_name = user_name  # 被禁言的目标用户昵称
             duration = (duration // 60) * 60
             if self.Permission_verification:
                 has_perm, error_msg = await check_group_and_permission(
@@ -310,12 +318,13 @@ class MyPlugin(Star):
             user_id(string): 要踢出的用户的QQ账号，必定为一串数字，如(12345678)
             user_name(string): 要踢出的用户的QQ昵称，如(小明)
         """
+        event = unwrap_event(event)
+        target_user_id = user_id
+        target_user_name = user_name
         try:
             group_id = event.get_group_id()
             self_id = event.get_self_id()
             operator_name = event.get_sender_name()
-            target_user_id = user_id  # 被踢出的目标用户ID
-            target_user_name = user_name  # 被踢出的目标用户昵称
             if not self.open_kick_user:
                 msg = f"操作失败：踢人功能未开启，无法踢出用户 {target_user_name}。"
                 logger.error(msg)
@@ -361,6 +370,7 @@ class MyPlugin(Star):
             enable(boolean): 设置为true时开启全体禁言，设置为false时关闭全群禁言，布尔类型参数
         """
         action_text = "开启" if enable else "关闭"
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             self_id = event.get_self_id()
@@ -403,6 +413,7 @@ class MyPlugin(Star):
             user_id(string): 要修改昵称的用户的QQ账号，必定为一串数字，如(12345678)
             card(string): 要修改的昵称，如果为空值则取消群昵称
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             self_id = event.get_self_id()
@@ -446,6 +457,7 @@ class MyPlugin(Star):
             user_id(string): 要修改头衔的用户的QQ账号，必定为一串数字，如(12345678)
             special_title(string): 要修改的头衔，如果为空值则取消群头衔
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -532,6 +544,7 @@ class MyPlugin(Star):
             user_id(string): 要修改管理员权限的用户的QQ账号，必定为一串数字，如(12345678)
             enable(bool): 是否启用管理员权限，设置为true时授予管理员权限，设置为false时取消管理员权限，布尔类型参数
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -608,6 +621,7 @@ class MyPlugin(Star):
         Args:
             reason(string): 发送 @全体成员 消息的理由，LLM需要将理由作为参数传入，以便在发送消息时附加说明,留空则不附加理由。
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -672,6 +686,7 @@ class MyPlugin(Star):
         Args:
             content(string): 要发送的群公告内容
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -710,6 +725,7 @@ class MyPlugin(Star):
         Args:
             notice_id(string): 要删除的群公告ID
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -748,6 +764,7 @@ class MyPlugin(Star):
         Args:
             group_name(string): 要修改的群名称
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             operator_name = event.get_sender_name()
@@ -786,6 +803,7 @@ class MyPlugin(Star):
         """
         start_time = time.time()
         
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             if not group_id:
@@ -836,6 +854,7 @@ class MyPlugin(Star):
         """
         start_time = time.time()
         
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             if not group_id:
@@ -898,6 +917,7 @@ class MyPlugin(Star):
         """
         start_time = time.time()
         
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             if not group_id:
@@ -978,6 +998,7 @@ class MyPlugin(Star):
         Returns:
             群成员列表，失败时返回None
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             if not group_id:
@@ -1000,6 +1021,7 @@ class MyPlugin(Star):
         Returns:
             精华消息列表，失败时返回None
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             if not group_id:
@@ -1024,6 +1046,7 @@ class MyPlugin(Star):
         Returns:
             群公告列表，失败时返回None
         """
+        event = unwrap_event(event)
         try:
             group_id = event.get_group_id()
             if not group_id:
