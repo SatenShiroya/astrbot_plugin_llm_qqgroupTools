@@ -11,7 +11,7 @@ from .core.event_utils import unwrap_event
 from .core.permission_utils import check_group_and_permission
 
 @register(
-    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.3.0"
+    "astrbot_plugin_llm_qqgroupTools", "SatenShiroya", "允许LLM自主管理群聊", "v2.4.0"
 )
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
