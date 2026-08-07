@@ -1,10 +1,13 @@
 # 更新日志 (CHANGELOG)
 
-- # _V 2.4.0_ 合并PR：[[fix]: 兼容 AstrBot ContextWrapper 事件- #7](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/pull/7)
-  - 修复: 兼容 AstrBot ContextWrapper 事件 ：感谢用户@[**fhzit**](https://github.com/fhzit)支持
+- # _V 2.4.1_ 
+  - 修改插件名称与描述
 
 <details>
 <summary>📋 点击查看历史更新日志</summary>
+
+- ### _V 2.4.0_ 合并PR：[[fix]: 兼容 AstrBot ContextWrapper 事件- #7](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/pull/7)
+  - 修复: 兼容 AstrBot ContextWrapper 事件 ：感谢用户@[**fhzit**](https://github.com/fhzit)支持
 
 - ### _V 2.3.0_ 
   - 修复了某些情况下设置管理员和头衔功能会产生严重越权的问题

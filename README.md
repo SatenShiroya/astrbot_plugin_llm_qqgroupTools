@@ -6,7 +6,7 @@
 
 _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 
-[![Plugin Version](https://img.shields.io/badge/Version-V2.4.0-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
+[![Plugin Version](https://img.shields.io/badge/Version-V2.4.1-blue.svg)](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-ff69b4)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](LICENSE)
 
@@ -71,6 +71,9 @@ _✨ 作者：[SatenShiroya](https://github.com/SatenShiroya)✨_
 ## 📝 _版本变更履历_
 <details>
 <summary style="padding-left: 1.6em;"><em>点此展开显示</em></summary>
+
+- ### _V 2.4.1_ 
+  - 修改插件名称与描述
 
 - ### _V 2.4.0_ 合并PR：[[fix]: 兼容 AstrBot ContextWrapper 事件- #7](https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools/pull/7)
   - 修复: 兼容 AstrBot ContextWrapper 事件 ：感谢用户@[**fhzit**](https://github.com/fhzit)支持
