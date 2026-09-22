@@ -737,10 +737,18 @@ class MyPlugin(Star):
                 if not has_perm:
                     return {"status": "error", "message": error_msg}
 
-            await event.bot._del_group_notice(
-                group_id=int(group_id),
-                notice_id=notice_id,
-            )
+            params = {
+                "group_id": int(group_id),
+                "notice_id": notice_id,
+            }
+            try:
+                await event.bot._del_group_notice(**params)
+            except Exception as primary_error:
+                logger.warning(
+                    f"删除群公告端点 /_del_group_notice 调用失败，"
+                    f"尝试备用端点 /_delete_group_notice: {primary_error}"
+                )
+                await event.bot.api.call_action('_delete_group_notice', **params)
             logger.info(f"群公告已删除：{notice_id}")
             msg = f"群公告已删除：{notice_id}"
             return {
