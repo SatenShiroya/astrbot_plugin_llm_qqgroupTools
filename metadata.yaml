@@ -5,6 +5,5 @@ version: V2.4.1 # 插件版本
 author: SatenShiroya # 作者
 support_platforms:
   - aiocqhttp
-  - qq_official
 astrbot_version: ">=4.12.0" # 适配的 AstralBot 版本，格式同上
 repo: https://github.com/SatenShiroya/astrbot_plugin_llm_qqgroupTools
